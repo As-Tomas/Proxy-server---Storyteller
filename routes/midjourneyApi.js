@@ -4,7 +4,6 @@ const url = require("url");
 const needle = require("needle");
 const { Midjourney } = require("midjourney");
 
-
 const client = new Midjourney({
   ServerId: process.env.SERVER_ID,
   ChannelId: process.env.CHANNEL_ID,
@@ -14,16 +13,23 @@ const client = new Midjourney({
 });
 
 router.get("/imagine", async (req, res) => {
+  const requestData = req.body;
 
-  if(process.env.NODE_ENV === 'production') {
-  console.log("Request query" + url.parse(req.url, true).query);
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Request query ", url.parse(req.url, true).query);
+    console.log("Request body: ", requestData);
+    //console.log("Request headers: ", req.headers);
   }
 
   await client.init();
 
   try {
-    const prompt =
-      "Christmas dinner with family in a cozy house in mountains, simple warm collors illustration";
+    const prompt = requestData.prompt;
+    if (prompt === undefined) {
+      prompt =
+        "Christmas evening with family in a cozy house in mountains close to ski resort, realistic";
+    }
+
     //imagine
     const Imagine = await client.Imagine(prompt, (uri, progress) => {
       console.log("loading", uri, "progress", progress);

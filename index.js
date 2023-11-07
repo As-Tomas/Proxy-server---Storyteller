@@ -8,10 +8,14 @@ const PORT = process.env.PORT || 3000;
 
 const app = express();
 
+// Parse JSON bodies (as sent by API clients)
+app.use(express.json());
+
+
 //rate limiting
 const limiter = rateLimit({
     windowMs: 10 * 60* 1000, //10 minutes
-    max: 5 //limit each IP to 1 requests per windowMs
+    max: 500 //limit each IP to 1 requests per windowMs
 }); 
 
 app.use(limiter);
