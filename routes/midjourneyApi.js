@@ -8,8 +8,8 @@ const client = new Midjourney({
   ServerId: process.env.SERVER_ID,
   ChannelId: process.env.CHANNEL_ID,
   SalaiToken: process.env.SALAI_TOKEN,
-  Debug: true,
-  Ws: true, //enable ws is required for remix mode (and custom zoom)
+  Debug: false,
+  Ws: false, //enable ws is required for remix mode (and custom zoom)
 });
 
 router.get("/imagine", async (req, res) => {
