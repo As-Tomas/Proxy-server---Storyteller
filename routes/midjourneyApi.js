@@ -8,7 +8,7 @@ const client = new Midjourney({
   ServerId: process.env.SERVER_ID,
   ChannelId: process.env.CHANNEL_ID,
   SalaiToken: process.env.SALAI_TOKEN,
-  Debug: false,
+  Debug: true,
   Ws: false, //enable ws is required for remix mode (and custom zoom)
 });
 
@@ -26,8 +26,8 @@ router.get("/imagine", async (req, res) => {
   try {
     const prompt = requestData.prompt;
     if (prompt === undefined) {
-      prompt =
-        "Christmas evening with family in a cozy house in mountains close to ski resort, realistic";
+      console.log("no prompt");
+      res.status(400).json({ success: false, error: "no prompt" });      
     }
 
     //imagine
@@ -41,32 +41,45 @@ router.get("/imagine", async (req, res) => {
       console.log("no message");
       res.status(400).json({ success: false });
     } else {
-      const U1CustomID = Imagine.options?.find((o) => o.label === "U1")?.custom;
-      if (!U1CustomID) {
-        console.log("no U1");
-        return;
-      }
-      // Upscale U1
-      const Upscale = await client.Custom({
-        msgId: Imagine.id,
-        flags: Imagine.flags,
-        customId: U1CustomID,
-        loading: (uri, progress) => {
-          console.log("loading", uri, "progress", progress);
-        },
-      });
-      if (!Upscale) {
-        console.log("no Upscale");
-        return;
-      }
-      console.log(Upscale);
+      // const U1CustomID = Imagine.options?.find((o) => o.label === "U1")?.custom;
+      // if (!U1CustomID) {
+      //   console.log("no U1");
+      //   return;
+      // }
+      // console.log('U1CustomID ***************************', U1CustomID)
+      // // Upscale U1
+      // try {
+      //   const Upscale = await client.Custom({
+      //     msgId: Imagine.id,
+      //     flags: Imagine.flags,
+      //     customId: U1CustomID,        
+      //     content: prompt,
+      //     loading: (uri, progress) => {
+      //       console.log("loading", uri, "progress", progress);
+      //     },
+      //   });
+
+      //   console.log(Upscale);
+
+      //   if (!Upscale) {
+      //     console.log("no Upscale");
+      //     return;
+      //   }
+      // } catch (error) {
+      //   console.error("Error: ", error.message);
+      //   console.error("Stack Trace: ", error.stack);
+      // }
+
+      // console.log("Upscale ",Upscale);
 
       console.log("link to all img " + Imagine.uri);
-      console.log("link to upscaled img " + Upscale.uri);
-      res.status(200).json({ success: true, img: Upscale.uri });
+      console.log("link to upscaled img " + Imagine.uri);
+      res.status(200).json({ success: true, img: Imagine.uri });
     }
   } catch (error) {
-    res.status(500).json({ success: false, error: error });
+    console.error("Error: ", error.message);
+    console.error("Stack Trace: ", error.stack);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
