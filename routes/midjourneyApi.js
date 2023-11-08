@@ -8,8 +8,8 @@ const client = new Midjourney({
   ServerId: process.env.SERVER_ID,
   ChannelId: process.env.CHANNEL_ID,
   SalaiToken: process.env.SALAI_TOKEN,
-  Debug: true,
-  Ws: false, //enable ws is required for remix mode (and custom zoom)
+  Debug: false,
+  Ws: true, //enable ws is required for remix mode (and custom zoom)
 });
 
 router.get("/imagine", async (req, res) => {
@@ -27,7 +27,7 @@ router.get("/imagine", async (req, res) => {
     const prompt = requestData.prompt;
     if (prompt === undefined) {
       console.log("no prompt");
-      res.status(400).json({ success: false, error: "no prompt" });      
+      res.status(400).json({ success: false, error: "no prompt" });
     }
 
     //imagine
@@ -41,40 +41,43 @@ router.get("/imagine", async (req, res) => {
       console.log("no message");
       res.status(400).json({ success: false });
     } else {
-      // const U1CustomID = Imagine.options?.find((o) => o.label === "U1")?.custom;
-      // if (!U1CustomID) {
-      //   console.log("no U1");
-      //   return;
-      // }
-      // console.log('U1CustomID ***************************', U1CustomID)
-      // // Upscale U1
-      // try {
-      //   const Upscale = await client.Custom({
-      //     msgId: Imagine.id,
-      //     flags: Imagine.flags,
-      //     customId: U1CustomID,        
-      //     content: prompt,
-      //     loading: (uri, progress) => {
-      //       console.log("loading", uri, "progress", progress);
-      //     },
-      //   });
+      const U1CustomID = Imagine.options?.find((o) => o.label === "U1")?.custom;
+      if (!U1CustomID) {
+        console.log("no U1");
+        return;
+      }
+      console.log("U1CustomID ***************************", U1CustomID);
+      // Upscale U1
+      
+      const Upscale = await client.Custom({
+        msgId: Imagine.id,
+        flags: Imagine.flags,
+        customId: U1CustomID,
+        content: prompt,
+        loading: (uri, progress) => {
+          console.log("loading", uri, "progress", progress);
+        },
+      });
 
-      //   console.log(Upscale);
+      console.log("here0");
 
-      //   if (!Upscale) {
-      //     console.log("no Upscale");
-      //     return;
-      //   }
-      // } catch (error) {
-      //   console.error("Error: ", error.message);
-      //   console.error("Stack Trace: ", error.stack);
-      // }
+      console.log(Upscale);
+      console.log("here1");
 
-      // console.log("Upscale ",Upscale);
+      if (!Upscale) {
+        console.log("no Upscale");
+        return;
+      }
+      console.log("here2");
+
+      console.log("Upscale ", Upscale);
+      console.log("here3");
+
+      //-------------+
 
       console.log("link to all img " + Imagine.uri);
-      console.log("link to upscaled img " + Imagine.uri);
-      res.status(200).json({ success: true, img: Imagine.uri });
+      console.log("link to upscaled img " + Upscale.uri);
+      res.status(200).json({ success: true, img: Upscale.uri });
     }
   } catch (error) {
     console.error("Error: ", error.message);
