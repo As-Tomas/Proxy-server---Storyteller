@@ -15,14 +15,13 @@ app.use(express.json());
 //rate limiting
 const limiter = rateLimit({
     windowMs: 10 * 60* 1000, //10 minutes
-    max: 500 //limit each IP to 1 requests per windowMs
+    max: 10 //limit each IP to 1 requests per windowMs
 }); 
 
 
 // Middleware to check for API key in the request header
 function checkApiKey(req, res, next) {
     const apiKey = req.get('X-API-Key'); // Replace 'X-API-Key' with the name of your header
-    console.log('apiKey', apiKey)
     if (!apiKey || apiKey !== process.env.SRV_USR_API) {
       return res.status(401).json({ success: false, message: 'Invalid or missing API key' });
     }
