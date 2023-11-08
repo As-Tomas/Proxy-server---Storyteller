@@ -18,6 +18,17 @@ const limiter = rateLimit({
     max: 500 //limit each IP to 1 requests per windowMs
 }); 
 
+
+// Middleware to check for API key in the request header
+function checkApiKey(req, res, next) {
+    const apiKey = req.get('X-API-Key'); // Replace 'X-API-Key' with the name of your header
+    console.log('apiKey', apiKey)
+    if (!apiKey || apiKey !== process.env.SRV_USR_API) {
+      return res.status(401).json({ success: false, message: 'Invalid or missing API key' });
+    }
+    next();
+  }
+
 app.use(limiter);
 app.set('trust proxy', 1);
 
@@ -25,7 +36,7 @@ app.set('trust proxy', 1);
 app.use(cors())
 
 // Routes
-app.use('/api', require('./routes/midjourneyApi'))
+app.use('/api', checkApiKey, require('./routes/midjourneyApi'))
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
