@@ -44,9 +44,9 @@ router.get("/imagine", async (req, res) => {
       const U1CustomID = Imagine.options?.find((o) => o.label === "U1")?.custom;
       if (!U1CustomID) {
         console.log("no U1");
-        return;
+        res.status(400).json({ success: false, error: "no U1" });
       }
-      console.log("U1CustomID ***************************", U1CustomID);
+      
       // Upscale U1
       
       const Upscale = await client.Custom({
@@ -57,23 +57,16 @@ router.get("/imagine", async (req, res) => {
         loading: (uri, progress) => {
           console.log("loading", uri, "progress", progress);
         },
-      });
-
-      console.log("here0");
+      });    
 
       console.log(Upscale);
-      console.log("here1");
 
       if (!Upscale) {
         console.log("no Upscale");
-        return;
+        res.status(400).json({ success: false, error: "no Upscale" });
       }
-      console.log("here2");
 
       console.log("Upscale ", Upscale);
-      console.log("here3");
-
-      //-------------+
 
       console.log("link to all img " + Imagine.uri);
       console.log("link to upscaled img " + Upscale.uri);
