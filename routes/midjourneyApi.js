@@ -221,7 +221,7 @@ router.post("/imagine", async (req, res) => {
     sendToAllClients({ jobId, status: 'error', message: error.message });
 
     // Respond to the initial HTTP request with the error
-    res.status(500).json({ success: false, message: 'An error occurred, please check the SSE for details.' });
+    res.status(500).json({ success: false, message: 'An error occurred, please check the SSE for details.', messages: error.message });
   }
 });
 
