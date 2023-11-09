@@ -165,7 +165,7 @@ router.get('/events', (req, res) => {
 });
 
 // Your existing /imagine endpoint modified to use SSE
-router.get("/imagine", async (req, res) => {
+router.post("/imagine", async (req, res) => {
   // Extract the prompt from the request
   const requestData = req.body;
   const prompt = requestData.prompt;
