@@ -131,13 +131,7 @@ const router = express.Router();
 const { Midjourney } = require("midjourney");
 
 // This will store client connections for SSE
-const clients = new Midjourney({
-    ServerId: process.env.SERVER_ID,
-    ChannelId: process.env.CHANNEL_ID,
-    SalaiToken: process.env.SALAI_TOKEN,
-    Debug: false,
-    Ws: true, //enable ws is required for remix mode (and custom zoom)
-  });
+const clients = {};
 
 // Helper function to send data to all clients
 function sendToAllClients(data) {
@@ -182,6 +176,14 @@ router.post("/imagine", async (req, res) => {
   // Initialize the client and send a job accepted message
   const jobId = Date.now();
   sendToAllClients({ jobId, status: 'accepted', message: 'Job accepted and processing started.' });
+
+  const client = new Midjourney({
+    ServerId: process.env.SERVER_ID,
+    ChannelId: process.env.CHANNEL_ID,
+    SalaiToken: process.env.SALAI_TOKEN,
+    Debug: false,
+    Ws: true, //enable ws is required for remix mode (and custom zoom)
+  });
 
   try {
     await client.init();
