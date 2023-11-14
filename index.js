@@ -11,13 +11,14 @@ const app = express();
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
+//TODO - reduce limits
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes
     max: 1000 // Limit each IP to 100 requests per windowMs
 });
 
-//app.use(limiter);
+app.use(limiter);
 app.set('trust proxy', 1);
 
 // Enable CORS
@@ -35,8 +36,8 @@ function checkApiKey(req, res, next) {
 }
 
 // Routes
-//app.use('/api', checkApiKey, require('./routes/midjourneyApi'));
-app.use('/api',  require('./routes/midjourneyApi'));
+app.use('/api', checkApiKey, require('./routes/midjourneyApi'));
+//app.use('/api',  require('./routes/midjourneyApi'));
 
 // // Endpoint for Server-Sent Events
 // app.get('/events', (req, res) => {
