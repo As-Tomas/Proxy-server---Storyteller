@@ -2,7 +2,7 @@ const clients = {};
 
 function sendToClient(clientId, data) {
     const client = clients[clientId];
-    console.log(`Attempting to send message to client ${clientId}`);
+    //console.log(`Attempting to send message to client ${clientId}`);
     if (client && !client.finished) {
         console.log(`Sending message to client ${clientId}`);
         client.write(`data: ${JSON.stringify(data)}\n\n`);
