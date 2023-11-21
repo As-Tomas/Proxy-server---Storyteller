@@ -1,5 +1,3 @@
-
-
 const express = require("express");
 const router = express.Router();
 const { Midjourney } = require("midjourney");
@@ -7,23 +5,24 @@ const { Midjourney } = require("midjourney");
 // This will store client connections for SSE
 const clients = {};
 
-// Helper function to send data to all clients
-function sendToAllClients(data) {
-  Object.keys(clients).forEach((clientID) => {
-    const client = clients[clientID];
-    console.log(`Sending message to client ${clientID}`);
-    if (client.finished) { // Check if the response is finished
-      delete clients[clientID]; // Remove from clients if finished
-    } else {
-      client.write(`data: ${JSON.stringify(data)}\n\n`);
-    }
-  });
+// Helper function to send data to a specific client
+function sendToClient(clientId, data) {
+  const client = clients[clientId];
+  console.log(`Attempting to send message to client ${clientId}`);
+  if (client && !client.finished) { // Check if the client exists and the response is not finished
+    console.log(`Sending message to client ${clientId}`);
+    client.write(`data: ${JSON.stringify(data)}\n\n`);
+  } else {
+    console.log(`Client ${clientId} not found or response finished`);
+  }
 }
 
 // SSE endpoint to establish a connection and send updates
 router.get("/events", (req, res) => {
+  const requestHeaders = req.headers;
+  const userName = requestHeaders['username'];
   // Generate a unique client ID
-  const clientId = Date.now();
+  const clientId = userName ;
   console.log(`Client connected with ID: ${clientId}`);
 
   res.writeHead(200, {
@@ -37,7 +36,8 @@ router.get("/events", (req, res) => {
   console.log(`Added client. Total clients: ${Object.keys(clients).length}`);
 
   // Send a welcome message on connection
-  res.write(`data: ${JSON.stringify({ message: "Connected to update stream" })}\n\n`);
+  const welcomeData = { message: "Connected to update stream" };
+  sendToClient(clientId, welcomeData);
   console.log(`Sent welcome message to client ${clientId}`);
 
   // Keep the connection open by sending a comment
@@ -58,6 +58,9 @@ router.get("/events", (req, res) => {
     delete clients[clientId];
     console.log(`Removed client. Total clients: ${Object.keys(clients).length}`);
   });
+
+  const data = {message: 'Job done', result: 'Your result here' };
+  sendToClient(clientId, data);
 });
 
 // Your existing /imagine endpoint modified to use SSE
@@ -65,30 +68,24 @@ router.post("/imagine", async (req, res) => {
   // Extract the prompt from the request
   const requestData = req.body;
   const prompt = requestData.prompt;
+  const clientId = requestData.userName; // Get the client ID from the request
+
+  console.log('prompt', prompt);
+  console.log('clientId', clientId); // Log the client ID
   if (!prompt) {
     return res
       .status(400)
       .json({ success: false, error: "No prompt provided" });
   }
 
-  // When something happens (e.g., when you get a result from your existing code), send an event to all clients
-  const data = { message: 'Something happened', result: 'Your result here' };
-  for (const client in clients) {
-    clients[client].write(`data: ${JSON.stringify(data)}\n\n`);
-  }
-
   // Initialize the client and send a job accepted message
-  const jobId = Date.now();
-  sendToAllClients({
+  const jobId = clientId; // Use the client ID as the job ID
+  const jobAcceptedData = {
     jobId,
     status: "accepted",
     message: "Job accepted and processing started.",
-  });
-
-  // res.json({
-  //   success: true,
-  //   message: "Job accepted, updates will be sent via SSE.",
-  // });
+  };
+  sendToClient(jobId, jobAcceptedData);
 
   // Process the imagine job asynchronously
   processImagineJob(prompt, jobId, res);
@@ -109,7 +106,8 @@ async function processImagineJob(prompt, jobId, res) {
     // Imagine process
     const Imagine = await client.Imagine(prompt, (uri, progress) => {
       // Send progress updates to the client
-      sendToAllClients({ jobId, status: "in-progress", progress, uri });
+      const progressData = { jobId, status: "in-progress", progress, uri };
+      sendToClient(jobId, progressData);
     });
 
     if (!Imagine) {
@@ -129,7 +127,8 @@ async function processImagineJob(prompt, jobId, res) {
       content: prompt,
       loading: (uri, progress) => {
         // Send progress updates to the client
-        sendToAllClients({ jobId, status: "in-progress", progress, uri });
+        const progressData = { jobId, status: "in-progress", progress, uri };
+        sendToClient(jobId, progressData);
       },
     });
 
@@ -138,7 +137,8 @@ async function processImagineJob(prompt, jobId, res) {
     }
 
     // When the image is ready, send an update to the client
-    sendToAllClients({ jobId, status: "completed", img: Upscale.uri });
+    const completedData = { jobId, status: "completed", img: Upscale.uri };
+    sendToClient(jobId, completedData);
 
     // Respond to the initial HTTP request to acknowledge it was received
     res.json({
@@ -147,7 +147,8 @@ async function processImagineJob(prompt, jobId, res) {
     });
   } catch (error) {
     // If an error occurs, send an error update to the client
-    sendToAllClients({ jobId, status: "error", message: error.message });
+    const errorData = { jobId, status: "error", message: error.message };
+    sendToClient(jobId, errorData);
 
     // Respond to the initial HTTP request with the error
     res
