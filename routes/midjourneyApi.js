@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { Midjourney } = require("midjourney");
-const { sse, sendToClient } = require('./sse');
+const { sse, sendToClient } = require("./sse");
 
 router.get("/events", sse);
 
@@ -10,10 +10,10 @@ router.post("/imagine", async (req, res) => {
   // Extract the prompt from the request
   const requestData = req.body;
   const prompt = requestData.prompt;
-  const clientId = requestData.userName; // Get the client ID from the request
+  const clientId = requestData.userNameAndJob; // Get the client ID from the request
 
-  console.log('prompt', prompt);
-  console.log('clientId', clientId); // Log the client ID
+  console.log("prompt", prompt);
+  console.log("clientId", clientId); // Log the client ID
   if (!prompt) {
     return res
       .status(400)
@@ -85,7 +85,7 @@ async function processImagineJob(prompt, jobId, res) {
     // Respond to the initial HTTP request to acknowledge it was received
     res.json({
       success: true,
-      message: "Job accepted, updates will be sent via SSE.",
+      message: "Job is done, updates are sent via SSE.",
     });
   } catch (error) {
     // If an error occurs, send an error update to the client
@@ -93,13 +93,11 @@ async function processImagineJob(prompt, jobId, res) {
     sendToClient(jobId, errorData);
 
     // Respond to the initial HTTP request with the error
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "An error occurred, please check the SSE for details.",
-        error: error.toString(),
-      });
+    res.status(500).json({
+      success: false,
+      message: "An error occurred, please check the SSE for details.",
+      error: error.toString(),
+    });
   }
 }
 

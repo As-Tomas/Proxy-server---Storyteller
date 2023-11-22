@@ -36,7 +36,9 @@ function checkApiKey(req, res, next) {
 }
 
 // Routes
-app.use('/api', checkApiKey, require('./routes/midjourneyApi'));
+app.use('/api', checkApiKey);
+app.use('/api', require('./routes/midjourneyApi'));
+app.use('/api', require('./routes/openAIapi'));
 //app.use('/api',  require('./routes/midjourneyApi'));
 
 // // Endpoint for Server-Sent Events
